@@ -10,7 +10,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"task-management-platform/backend/internal/models"
-	"task-management-platform/backend/internal/repository"
 )
 
 var (
@@ -18,11 +17,17 @@ var (
 	ErrEmailAlreadyExists = errors.New("email already exists")
 )
 
-type AuthService struct {
-	userRepo *repository.UserRepository
+type UserRepo interface {
+	Create(ctx context.Context, user *models.User) error
+	GetByEmail(ctx context.Context, email string) (*models.User, error)
+	GetByID(ctx context.Context, id string) (*models.User, error)
 }
 
-func NewAuthService(userRepo *repository.UserRepository) *AuthService {
+type AuthService struct {
+	userRepo UserRepo
+}
+
+func NewAuthService(userRepo UserRepo) *AuthService {
 	return &AuthService{userRepo: userRepo}
 }
 
