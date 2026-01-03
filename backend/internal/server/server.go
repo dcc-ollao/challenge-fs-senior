@@ -29,6 +29,10 @@ func New(cfg config.Config) *gin.Engine {
 		handlers.RespondOK(c, http.StatusOK, gin.H{"status": "ok"})
 	})
 
+	r.GET("/health", func(c *gin.Context) {
+		handlers.RespondOK(c, http.StatusOK, gin.H{"status": "ok"})
+	})
+
 	routes.Register(r, routes.Dependencies{
 		AuthHandler: authHandler,
 	})
