@@ -2,12 +2,9 @@ package main
 
 import (
 	"log"
-	"net/http"
 
 	"task-management-platform/backend/internal/config"
-	"task-management-platform/backend/internal/handlers"
-
-	"github.com/gin-gonic/gin"
+	"task-management-platform/backend/internal/server"
 )
 
 func main() {
@@ -16,13 +13,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	r := gin.Default()
-
-	r.GET("/health", func(c *gin.Context) {
-		handlers.RespondOK(c, http.StatusOK, gin.H{
-			"status": "ok",
-		})
-	})
+	r := server.New()
 
 	log.Printf("api starting on port %s", cfg.Port)
 	if err := r.Run(":" + cfg.Port); err != nil {
