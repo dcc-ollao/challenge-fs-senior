@@ -8,6 +8,7 @@ import (
 	"task-management-platform/backend/internal/handlers"
 	"task-management-platform/backend/internal/repository"
 	"task-management-platform/backend/internal/routes"
+	"task-management-platform/backend/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,13 +20,18 @@ func New(cfg config.Config) *gin.Engine {
 	if err != nil {
 		log.Fatal(err)
 	}
-	_ = db
+
+	userRepo := repository.NewUserRepository(db)
+	authService := services.NewAuthService(userRepo)
+	authHandler := handlers.NewAuthHandler(authService)
 
 	r.GET("/", func(c *gin.Context) {
 		handlers.RespondOK(c, http.StatusOK, gin.H{"status": "ok"})
 	})
 
-	routes.Register(r, routes.Dependencies{})
+	routes.Register(r, routes.Dependencies{
+		AuthHandler: authHandler,
+	})
 
 	return r
 }
