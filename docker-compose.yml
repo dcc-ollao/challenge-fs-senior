@@ -23,7 +23,7 @@ services:
       - ./database/migrations:/migrations
     command: [
       "-path", "/migrations",
-      "-database", "postgres://postgres:postgres@db:5432/postgres?sslmode=disable",
+      "-database", "postgres://postgres:postgres@db:5432/task_management?sslmode=disable",
       "up"
     ]
 

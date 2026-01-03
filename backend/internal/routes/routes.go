@@ -1,17 +1,17 @@
 package routes
 
 import (
-	"net/http"
+	"github.com/gin-gonic/gin"
 
 	"task-management-platform/backend/internal/handlers"
-
-	"github.com/gin-gonic/gin"
 )
 
-func Register(r *gin.Engine) {
-	r.GET("/health", func(c *gin.Context) {
-		handlers.RespondOK(c, http.StatusOK, gin.H{
-			"status": "ok",
-		})
-	})
+type Dependencies struct {
+	AuthHandler *handlers.AuthHandler
+}
+
+func Register(r *gin.Engine, deps Dependencies) {
+	if deps.AuthHandler != nil {
+		RegisterAuthRoutes(r, deps.AuthHandler)
+	}
 }

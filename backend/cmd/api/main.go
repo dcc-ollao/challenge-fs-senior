@@ -13,9 +13,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	r := server.New()
+	r := server.New(cfg)
 
 	log.Printf("api starting on port %s", cfg.Port)
+
 	if err := r.Run(":" + cfg.Port); err != nil {
 		log.Fatal(err)
 	}
