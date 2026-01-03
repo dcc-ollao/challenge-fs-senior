@@ -15,6 +15,17 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
+  migrate:
+    image: migrate/migrate:v4.17.1
+    depends_on:
+      - db
+    volumes:
+      - ./database/migrations:/migrations
+    command: [
+      "-path", "/migrations",
+      "-database", "postgres://postgres:postgres@db:5432/postgres?sslmode=disable",
+      "up"
+    ]
 
   backend:
     container_name: taskmgr-backend
