@@ -1,16 +1,18 @@
 package main
 
 import (
+	"log"
 	"net/http"
-	"os"
+
+	"task-management-platform/backend/internal/config"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	port := os.Getenv("API_PORT")
-	if port == "" {
-		port = "8080"
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	r := gin.Default()
@@ -21,5 +23,8 @@ func main() {
 		})
 	})
 
-	_ = r.Run(":" + port)
+	log.Printf("api starting on port %s", cfg.Port)
+	if err := r.Run(":" + cfg.Port); err != nil {
+		log.Fatal(err)
+	}
 }
