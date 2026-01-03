@@ -6,4 +6,5 @@ const (
 	CodeForbidden    = "forbidden"
 	CodeNotFound     = "not_found"
 	CodeInternal     = "internal_error"
+	CodeBusinessRule = "business_rule_violation"
 )
