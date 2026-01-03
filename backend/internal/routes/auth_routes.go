@@ -23,5 +23,16 @@ func RegisterAuthRoutes(r *gin.Engine, authHandler *handlers.AuthHandler) {
 				"role":   role,
 			})
 		})
+		auth.GET(
+			"/admin/ping",
+			middleware.AuthRequired(),
+			middleware.RequireRole("admin"),
+			func(c *gin.Context) {
+				c.JSON(http.StatusOK, gin.H{
+					"status": "admin ok",
+				})
+			},
+		)
+
 	}
 }
