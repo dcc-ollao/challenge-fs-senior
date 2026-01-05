@@ -8,16 +8,23 @@ import (
 	"github.com/google/uuid"
 
 	"task-management-platform/backend/internal/models"
-	"task-management-platform/backend/internal/repository"
 )
 
 var ErrForbidden = errors.New("forbidden")
 
-type ProjectService struct {
-	repo *repository.ProjectRepository
+type ProjectRepository interface {
+	Create(context.Context, *models.Project) error
+	GetByID(context.Context, string) (*models.Project, error)
+	ListByOwner(context.Context, string) ([]models.Project, error)
+	UpdateName(context.Context, string, string) error
+	Delete(context.Context, string) error
 }
 
-func NewProjectService(repo *repository.ProjectRepository) *ProjectService {
+type ProjectService struct {
+	repo ProjectRepository
+}
+
+func NewProjectService(repo ProjectRepository) *ProjectService {
 	return &ProjectService{repo: repo}
 }
 
