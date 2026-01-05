@@ -22,12 +22,16 @@ func New(cfg config.Config) *gin.Engine {
 	}
 
 	userRepo := repository.NewUserRepository(db)
+	projectRepo := repository.NewProjectRepository(db)
 
 	authService := services.NewAuthService(userRepo)
 	authHandler := handlers.NewAuthHandler(authService)
 
 	userService := services.NewUserService(userRepo)
 	userHandler := handlers.NewUserHandler(userService)
+
+	projectService := services.NewProjectService(projectRepo)
+	projectHandler := handlers.NewProjectHandler(projectService)
 
 	r.GET("/", func(c *gin.Context) {
 		handlers.RespondOK(c, http.StatusOK, gin.H{"status": "ok"})
@@ -38,8 +42,9 @@ func New(cfg config.Config) *gin.Engine {
 	})
 
 	routes.Register(r, routes.Dependencies{
-		AuthHandler: authHandler,
-		UserHandler: userHandler,
+		AuthHandler:    authHandler,
+		UserHandler:    userHandler,
+		ProjectHandler: projectHandler,
 	})
 
 	return r

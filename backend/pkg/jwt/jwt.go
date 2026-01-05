@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	ErrInvalidToken = errors.New("invalid token")
+	ErrInvalidToken    = errors.New("invalid token")
+	ErrJWTSecretNotSet = errors.New("JWT_SECRET is not set")
 )
 
 type Claims struct {
@@ -21,7 +22,7 @@ type Claims struct {
 func GenerateToken(userID, role string) (string, error) {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		return "", errors.New("JWT_SECRET is not set")
+		return "", ErrJWTSecretNotSet
 	}
 
 	ttlMinutes := getTTLMinutes()
@@ -42,7 +43,7 @@ func GenerateToken(userID, role string) (string, error) {
 func ParseToken(tokenString string) (*Claims, error) {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		return nil, errors.New("JWT_SECRET is not set")
+		return nil, ErrJWTSecretNotSet
 	}
 
 	token, err := jwtlib.ParseWithClaims(
