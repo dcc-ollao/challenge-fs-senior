@@ -2,15 +2,12 @@ package services
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
 
 	"task-management-platform/backend/internal/models"
 )
-
-var ErrForbidden = errors.New("forbidden")
 
 type ProjectRepository interface {
 	Create(context.Context, *models.Project) error
@@ -56,8 +53,6 @@ func (s *ProjectService) GetByID(ctx context.Context, requesterID string, reques
 }
 
 func (s *ProjectService) List(ctx context.Context, requesterID string, requesterRole string) ([]models.Project, error) {
-	// En este MVP, admin ve todos? NO hay método ListAll en repo ni existe en migración como requisito.
-	// Mantenemos "cada uno ve lo suyo" (admin incluido) para no abrir data surface sin necesidad.
 	_ = requesterRole
 	return s.repo.ListByOwner(ctx, requesterID)
 }

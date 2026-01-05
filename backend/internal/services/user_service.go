@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"errors"
 	"task-management-platform/backend/internal/models"
 	"task-management-platform/backend/internal/repository"
 )
@@ -33,7 +32,7 @@ func (s *UserService) Update(ctx context.Context, user *models.User) error {
 
 func (s *UserService) Delete(ctx context.Context, actorID, targetID string) error {
 	if actorID == targetID {
-		return errors.New("cannot delete own user")
+		return ErrCannotDeleteOwnUser
 	}
 	return s.repo.Delete(ctx, targetID)
 }

@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"time"
 
@@ -10,11 +9,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"task-management-platform/backend/internal/models"
-)
-
-var (
-	ErrInvalidCredentials = errors.New("invalid credentials")
-	ErrEmailAlreadyExists = errors.New("email already exists")
 )
 
 type UserRepo interface {
@@ -35,7 +29,7 @@ func (s *AuthService) Register(ctx context.Context, email, password string) (*mo
 	email = normalizeEmail(email)
 
 	if email == "" || password == "" {
-		return nil, errors.New("email and password are required")
+		return nil, ErrEmailAndPasswordRequired
 	}
 
 	_, err := s.userRepo.GetByEmail(ctx, email)

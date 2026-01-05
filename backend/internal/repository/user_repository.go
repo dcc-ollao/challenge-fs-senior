@@ -10,7 +10,7 @@ import (
 	"task-management-platform/backend/internal/models"
 )
 
-var ErrNotFound = errors.New("not found")
+var ErrNotFound = errors.New("resource not found")
 
 type UserRepository struct {
 	db *sqlx.DB

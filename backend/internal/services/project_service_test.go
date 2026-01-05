@@ -9,10 +9,6 @@ import (
 	"task-management-platform/backend/internal/repository"
 )
 
-/*
-Fake repository implementing the ProjectRepository interface
-*/
-
 type fakeProjectRepo struct {
 	projects map[string]models.Project
 }

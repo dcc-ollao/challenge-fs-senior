@@ -11,8 +11,6 @@ import (
 	"task-management-platform/backend/internal/models"
 )
 
-var errNotFound = errors.New("not found")
-
 type fakeUserRepo struct {
 	byEmail map[string]*models.User
 	byID    map[string]*models.User
@@ -34,7 +32,7 @@ func (r *fakeUserRepo) Create(ctx context.Context, user *models.User) error {
 func (r *fakeUserRepo) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	u, ok := r.byEmail[email]
 	if !ok {
-		return nil, errNotFound
+		return nil, ErrNotFound
 	}
 	return u, nil
 }
@@ -42,7 +40,7 @@ func (r *fakeUserRepo) GetByEmail(ctx context.Context, email string) (*models.Us
 func (r *fakeUserRepo) GetByID(ctx context.Context, id string) (*models.User, error) {
 	u, ok := r.byID[id]
 	if !ok {
-		return nil, errNotFound
+		return nil, ErrNotFound
 	}
 	return u, nil
 }
