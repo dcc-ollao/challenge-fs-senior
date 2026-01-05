@@ -159,3 +159,13 @@ func TestDeleteNotFound(t *testing.T) {
 		t.Fatalf("expected ErrNotFound, got %v", err)
 	}
 }
+
+func TestGetByIDNotFound(t *testing.T) {
+	repo := newFakeProjectRepo()
+	svc := NewProjectService(repo)
+
+	_, err := svc.GetByID(context.Background(), "user1", "member", "missing")
+	if err != repository.ErrNotFound {
+		t.Fatalf("expected ErrNotFound, got %v", err)
+	}
+}
