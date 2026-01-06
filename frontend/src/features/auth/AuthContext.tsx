@@ -7,25 +7,22 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // bootstrap session
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return Boolean(storage.getToken());
+  });
+
   useEffect(() => {
-    const token = storage.getToken();
-    if (token) {
-      setIsAuthenticated(true);
-      // opcional: setUser desde /me en el futuro
-    }
+    setIsAuthenticated(Boolean(storage.getToken()));
   }, []);
 
   async function login(email: string, password: string) {
     const res = await api.post("/auth/login", { email, password });
-
-    const { token, user } = res.data;
+    const token = res.data.accessToken;
 
     storage.setToken(token);
-    setUser(user ?? null);
-    setIsAuthenticated(true);
+    setUser(null);
+    setIsAuthenticated(Boolean(token));
   }
 
   function logout() {
@@ -35,13 +32,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider
-      value={{ user, isAuthenticated, login, logout }}
-    >
+    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 }
+
 
 export function useAuthContext() {
   const ctx = useContext(AuthContext);
