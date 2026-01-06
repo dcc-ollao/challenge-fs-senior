@@ -15,17 +15,41 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
+
   migrate:
     image: migrate/migrate:v4.17.1
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - ./database/migrations:/migrations
+    restart: "no"
     command: [
       "-path", "/migrations",
-      "-database", "postgres://postgres:postgres@db:5432/task_management?sslmode=disable",
+      "-database", "postgres://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-task_management}?sslmode=disable",
       "up"
     ]
+
+  seed:
+    image: postgres:16-alpine
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_started
+    environment:
+      PGPASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      - ./database/seeds:/seeds:ro
+    restart: "no"
+    command: >
+      sh -c "
+        echo 'Running seeds...' &&
+        for f in /seeds/*.sql; do
+          echo \"Applying $$f\"; psql -h db -U ${DB_USER:-postgres} -d ${DB_NAME:-task_management} -f $$f;
+        done
+      "
+
 
   backend:
     container_name: taskmgr-backend
