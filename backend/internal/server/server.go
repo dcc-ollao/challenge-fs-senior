@@ -3,6 +3,7 @@ package server
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"task-management-platform/backend/internal/config"
 	"task-management-platform/backend/internal/handlers"
@@ -10,11 +11,19 @@ import (
 	"task-management-platform/backend/internal/routes"
 	"task-management-platform/backend/internal/services"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func New(cfg config.Config) *gin.Engine {
 	r := gin.Default()
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"http://localhost:5173"},
+		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
+		MaxAge:       12 * time.Hour,
+	}))
 
 	db, err := repository.NewDB(cfg)
 	if err != nil {
