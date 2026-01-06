@@ -10,6 +10,7 @@ type Dependencies struct {
 	AuthHandler    *handlers.AuthHandler
 	UserHandler    *handlers.UserHandler
 	ProjectHandler *handlers.ProjectHandler
+	TaskHandler    *handlers.TaskHandler
 }
 
 func Register(r *gin.Engine, deps Dependencies) {
@@ -23,5 +24,9 @@ func Register(r *gin.Engine, deps Dependencies) {
 
 	if deps.ProjectHandler != nil {
 		RegisterProjectRoutes(r, deps.ProjectHandler)
+	}
+
+	if deps.TaskHandler != nil {
+		RegisterTaskRoutes(r, deps.TaskHandler)
 	}
 }
