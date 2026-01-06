@@ -10,15 +10,23 @@ import (
 	"task-management-platform/backend/internal/models"
 )
 
-type ProjectRepository struct {
+type ProjectRepository interface {
+	Create(ctx context.Context, project *models.Project) error
+	GetByID(ctx context.Context, id string) (*models.Project, error)
+	ListByOwner(ctx context.Context, ownerID string) ([]models.Project, error)
+	UpdateName(ctx context.Context, id string, name string) error
+	Delete(ctx context.Context, id string) error
+}
+
+type projectRepository struct {
 	db *sqlx.DB
 }
 
-func NewProjectRepository(db *sqlx.DB) *ProjectRepository {
-	return &ProjectRepository{db: db}
+func NewProjectRepository(db *sqlx.DB) ProjectRepository {
+	return &projectRepository{db: db}
 }
 
-func (r *ProjectRepository) Create(ctx context.Context, project *models.Project) error {
+func (r *projectRepository) Create(ctx context.Context, project *models.Project) error {
 	query := `
 		INSERT INTO projects (id, name, owner_id, created_at)
 		VALUES (:id, :name, :owner_id, :created_at)
@@ -27,7 +35,7 @@ func (r *ProjectRepository) Create(ctx context.Context, project *models.Project)
 	return err
 }
 
-func (r *ProjectRepository) GetByID(ctx context.Context, id string) (*models.Project, error) {
+func (r *projectRepository) GetByID(ctx context.Context, id string) (*models.Project, error) {
 	var p models.Project
 
 	query := `
@@ -44,7 +52,7 @@ func (r *ProjectRepository) GetByID(ctx context.Context, id string) (*models.Pro
 	return &p, nil
 }
 
-func (r *ProjectRepository) ListByOwner(ctx context.Context, ownerID string) ([]models.Project, error) {
+func (r *projectRepository) ListByOwner(ctx context.Context, ownerID string) ([]models.Project, error) {
 	projects := make([]models.Project, 0)
 
 	query := `
@@ -59,7 +67,7 @@ func (r *ProjectRepository) ListByOwner(ctx context.Context, ownerID string) ([]
 	return projects, nil
 }
 
-func (r *ProjectRepository) UpdateName(ctx context.Context, id string, name string) error {
+func (r *projectRepository) UpdateName(ctx context.Context, id string, name string) error {
 	query := `
 		UPDATE projects
 		SET name = $2
@@ -79,7 +87,7 @@ func (r *ProjectRepository) UpdateName(ctx context.Context, id string, name stri
 	return nil
 }
 
-func (r *ProjectRepository) Delete(ctx context.Context, id string) error {
+func (r *projectRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM projects WHERE id = $1`
 	res, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {

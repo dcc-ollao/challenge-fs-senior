@@ -11,4 +11,5 @@ var (
 	ErrCannotDeleteOwnUser      = errors.New("cannot delete own user")
 	ErrInvalidToken             = errors.New("invalid token")
 	ErrJWTSecretNotSet          = errors.New("JWT_SECRET is not set")
+	ErrBadRequest               = errors.New("bad request")
 )
