@@ -1,12 +1,12 @@
 WITH admin_user AS (
   INSERT INTO users (email, password_hash, role)
-  VALUES ('admin@demo.com', 'demo', 'admin')
+  VALUES ('admin@demo.com', '$2a$10$1blEC2WDt7LhFcVNLVHSv.IK4bs2Yeo2Lu9QbD0zK3/LWvbA0d2mm', 'admin')
   ON CONFLICT (email) DO NOTHING
   RETURNING id
 ),
 normal_user AS (
   INSERT INTO users (email, password_hash, role)
-  VALUES ('user@demo.com', 'demo', 'user')
+  VALUES ('user@demo.com', '$2a$10$1blEC2WDt7LhFcVNLVHSv.IK4bs2Yeo2Lu9QbD0zK3/LWvbA0d2mm', 'user')
   ON CONFLICT (email) DO NOTHING
   RETURNING id
 ),

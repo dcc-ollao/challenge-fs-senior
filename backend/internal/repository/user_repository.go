@@ -22,8 +22,8 @@ func NewUserRepository(db *sqlx.DB) *UserRepository {
 
 func (r *UserRepository) Create(ctx context.Context, user *models.User) error {
 	query := `
-		INSERT INTO users (id, email, name, password_hash, role, created_at, updated_at)
-		VALUES (:id, :email, :name, :password_hash, :role, :created_at, :updated_at)
+		INSERT INTO users (id, email, password_hash, role, created_at)
+		VALUES (:id, :email, :password_hash, :role, :created_at)
 	`
 	_, err := r.db.NamedExecContext(ctx, query, user)
 	return err
@@ -33,7 +33,7 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.
 	var user models.User
 
 	query := `
-		SELECT id, email, name, password_hash, role, created_at, updated_at
+		SELECT id, email, password_hash, role, created_at
 		FROM users
 		WHERE email = $1
 	`
@@ -52,7 +52,7 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, 
 	var user models.User
 
 	query := `
-		SELECT id, email, name, password_hash, role, created_at, updated_at
+		SELECT id, email, password_hash, role, created_at
 		FROM users
 		WHERE id = $1
 	`
@@ -71,7 +71,7 @@ func (r *UserRepository) List(ctx context.Context) ([]models.User, error) {
 	users := make([]models.User, 0)
 
 	query := `
-		SELECT id, email, name, password_hash, role, created_at, updated_at
+		SELECT id, email, password_hash, role, created_at
 		FROM users
 		ORDER BY created_at DESC
 	`
@@ -85,9 +85,7 @@ func (r *UserRepository) Update(ctx context.Context, user *models.User) error {
 	query := `
 		UPDATE users
 		SET email = :email,
-		    name = :name,
 		    role = :role,
-		    updated_at = now()
 		WHERE id = :id
 	`
 	res, err := r.db.NamedExecContext(ctx, query, user)

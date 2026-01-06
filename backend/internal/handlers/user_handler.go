@@ -57,7 +57,6 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 func (h *UserHandler) Create(c *gin.Context) {
 	var req struct {
 		Email    string `json:"email" binding:"required,email"`
-		Name     string `json:"name" binding:"required"`
 		Password string `json:"password" binding:"required,min=8"`
 		Role     string `json:"role" binding:"required"`
 	}
@@ -90,11 +89,9 @@ func (h *UserHandler) Create(c *gin.Context) {
 	user := &models.User{
 		ID:           uuid.NewString(),
 		Email:        req.Email,
-		Name:         req.Name,
 		Role:         req.Role,
 		PasswordHash: string(hash),
 		CreatedAt:    now,
-		UpdatedAt:    now,
 	}
 
 	if err := h.service.Create(c.Request.Context(), user); err != nil {
@@ -116,7 +113,6 @@ func (h *UserHandler) Update(c *gin.Context) {
 
 	var req struct {
 		Email string `json:"email" binding:"required,email"`
-		Name  string `json:"name" binding:"required"`
 		Role  string `json:"role" binding:"required"`
 	}
 
@@ -128,7 +124,6 @@ func (h *UserHandler) Update(c *gin.Context) {
 	user := &models.User{
 		ID:    id,
 		Email: req.Email,
-		Name:  req.Name,
 		Role:  req.Role,
 	}
 
