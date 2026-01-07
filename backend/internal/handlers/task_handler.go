@@ -21,11 +21,10 @@ func NewTaskHandler(tasks services.TaskService) *TaskHandler {
 
 func (h *TaskHandler) Create(c *gin.Context) {
 	actor := mustGetActor(c)
-
-	projectIDStr := c.Param("projectId")
+	projectIDStr := c.Param("id")
 	projectID, err := uuid.Parse(projectIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid projectId"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project id"})
 		return
 	}
 
@@ -82,9 +81,9 @@ func (h *TaskHandler) GetByID(c *gin.Context) {
 func (h *TaskHandler) ListByProject(c *gin.Context) {
 	actor := mustGetActor(c)
 
-	projectID, err := uuid.Parse(c.Param("projectId"))
+	projectID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid projectId"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project id"})
 		return
 	}
 
