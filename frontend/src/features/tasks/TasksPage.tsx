@@ -1,24 +1,45 @@
 import { useEffect, useMemo, useState } from "react";
-import { createTask, listProjects, listTasksByProject } from "./api";
+import {
+  createTask,
+  listProjects,
+  listTasksByProject,
+  updateTask,
+  updateTaskStatus,
+} from "./api";
 import type { Project, Task } from "./types";
 
-function StatusBadge({ status }: { status?: string }) {
-  if (!status) return null;
+const STATUS_LABELS: Record<string, string> = {
+  todo: "To do",
+  in_progress: "In progress",
+  done: "Done",
+};
 
-  const styles: Record<string, string> = {
-    todo: "bg-slate-100 text-slate-700",
-    in_progress: "bg-blue-100 text-blue-700",
-    done: "bg-green-100 text-green-700",
-  };
-
+function StatusSelect({
+  value,
+  onChange,
+}: {
+  value?: string;
+  onChange: (v: string) => void;
+}) {
   return (
-    <span
-      className={[
-        "rounded-full px-2 py-0.5 text-xs font-medium",
-        styles[status] ?? "bg-slate-100 text-slate-600",
-      ].join(" ")}
+    <select
+      value={value ?? "todo"}
+      onChange={(e) => onChange(e.target.value)}
+      className="rounded-md border px-2 py-1 text-xs bg-white hover:bg-slate-50"
     >
-      {status.replace("_", " ")}
+      {Object.entries(STATUS_LABELS).map(([key, label]) => (
+        <option key={key} value={key}>
+          {label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function ProjectBadge({ name }: { name: string }) {
+  return (
+    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
+      {name}
     </span>
   );
 }
@@ -39,6 +60,10 @@ export default function TasksPage() {
     () => projects.find((p) => p.id === selectedProjectId) ?? null,
     [projects, selectedProjectId]
   );
+
+  const projectMap = useMemo(() => {
+    return Object.fromEntries(projects.map((p) => [p.id, p]));
+  }, [projects]);
 
   useEffect(() => {
     let mounted = true;
@@ -113,6 +138,28 @@ export default function TasksPage() {
     }
   }
 
+  async function onStatusChange(task: Task, nextStatus: string) {
+  const prevStatus = task.status;
+
+  setTasks((prev) =>
+    prev.map((t) => (t.id === task.id ? { ...t, status: nextStatus } : t))
+  );
+
+  try {
+    await updateTask(task.id, {
+      title: task.title,
+      description: task.description ?? "",
+      status: nextStatus,
+      assignee_id: task.assigneeId ?? null,
+    });
+  } catch {
+    setTasks((prev) =>
+      prev.map((t) => (t.id === task.id ? { ...t, status: prevStatus } : t))
+    );
+    setError("Failed to update task status.");
+  }
+}
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -123,7 +170,6 @@ export default function TasksPage() {
         </p>
       </div>
 
-      {/* Error */}
       {error && (
         <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           {error}
@@ -153,14 +199,6 @@ export default function TasksPage() {
         )}
       </div>
 
-      {/* No projects */}
-      {!loadingProjects && projects.length === 0 && (
-        <div className="rounded-lg border border-dashed bg-white p-8 text-center text-sm text-slate-600">
-          No projects found.<br />
-          Create a project first to start adding tasks.
-        </div>
-      )}
-
       {/* Create task */}
       {selectedProject && (
         <div className="rounded-lg border bg-white p-4 space-y-3">
@@ -188,29 +226,27 @@ export default function TasksPage() {
       )}
 
       {/* Tasks list */}
-      <div>
-        {loadingTasks ? (
-          <div className="text-sm text-slate-500">Loading tasks…</div>
-        ) : tasks.length === 0 && selectedProjectId ? (
-          <div className="rounded-lg border border-dashed bg-white p-8 text-center text-sm text-slate-600">
-            No tasks yet.
-          </div>
-        ) : (
-          <ul className="divide-y rounded-lg border bg-white">
-            {tasks.map((t) => (
-              <li
-                key={t.id}
-                className="flex items-center justify-between px-4 py-3 transition hover:bg-slate-50"
-              >
-                <div className="text-sm font-medium">
-                  {t.title}
-                </div>
-                <StatusBadge status={t.status} />
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <ul className="divide-y rounded-lg border bg-white">
+        {tasks.map((t) => (
+          <li
+            key={t.id}
+            className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-slate-50 transition"
+          >
+            <div className="flex flex-col gap-1">
+              <div className="text-sm font-medium">{t.title}</div>
+              {t.projectId && projectMap[t.projectId] && (
+              <ProjectBadge name={projectMap[t.projectId].name} />
+              )}
+
+            </div>
+
+            <StatusSelect
+              value={t.status}
+              onChange={(v) => onStatusChange(t, v)}
+            />
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
