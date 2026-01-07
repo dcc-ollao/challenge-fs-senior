@@ -26,6 +26,7 @@ export default function TasksPage() {
       setError(null);
       setLoadingProjects(true);
       try {
+        console.log("selectedProjectId", selectedProjectId);
         const data = await listProjects();
         if (!mounted) return;
 
@@ -55,7 +56,7 @@ export default function TasksPage() {
       try {
         const data = await listTasksByProject(selectedProjectId);
         if (!mounted) return;
-        setTasks(data);
+        setTasks(data ?? []);
       } catch {
         setError("Failed to load tasks.");
       } finally {
@@ -82,7 +83,7 @@ export default function TasksPage() {
       await createTask(selectedProjectId, trimmed);
       setTitle("");
       const data = await listTasksByProject(selectedProjectId);
-      setTasks(data);
+      setTasks(data ?? []);
     } catch {
       setError("Failed to create task.");
     } finally {
