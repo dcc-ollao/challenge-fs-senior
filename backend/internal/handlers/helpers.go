@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	"task-management-platform/backend/internal/models"
 	"task-management-platform/backend/internal/services"
@@ -24,15 +25,21 @@ func writeServiceError(c *gin.Context, err error) {
 }
 
 func mustGetActor(c *gin.Context) models.User {
-	v, ok := c.Get("user")
-	if !ok {
+	userID := c.GetString("userId")
+	role := c.GetString("role")
+	if userID == "" {
 		return models.User{}
 	}
-	u, ok := v.(models.User)
-	if !ok {
+
+	id, err := uuid.Parse(userID)
+	if err != nil {
 		return models.User{}
 	}
-	return u
+
+	return models.User{
+		ID:   id.String(),
+		Role: role,
+	}
 }
 
 func parseIntDefault(s string, def int) int {
