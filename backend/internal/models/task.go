@@ -7,12 +7,12 @@ import (
 )
 
 type Task struct {
-	ID          uuid.UUID  `db:"id"`
-	ProjectID   uuid.UUID  `db:"project_id"`
-	Title       string     `db:"title"`
-	Description string     `db:"description"`
-	Status      string     `db:"status"`
-	AssigneeID  *uuid.UUID `db:"assignee_id"`
-	CreatedAt   time.Time  `db:"created_at"`
-	UpdatedAt   time.Time  `db:"updated_at"`
+	ID          uuid.UUID  `json:"id" db:"id"`
+	ProjectID   uuid.UUID  `json:"projectId" db:"project_id"`
+	Title       string     `json:"title" db:"title"`
+	Description string     `json:"description" db:"description"`
+	Status      string     `json:"status" db:"status"`
+	AssigneeID  *uuid.UUID `json:"assigneeId" db:"assignee_id"`
+	CreatedAt   time.Time  `json:"createdAt" db:"created_at"`
+	UpdatedAt   time.Time  `json:"updatedAt" db:"updated_at"`
 }

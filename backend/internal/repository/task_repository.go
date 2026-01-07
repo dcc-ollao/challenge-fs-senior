@@ -35,6 +35,9 @@ func NewTaskRepository(db *sqlx.DB) TaskRepository {
 }
 
 func (r *taskRepository) Create(ctx context.Context, task *models.Task) error {
+	if task.ID == uuid.Nil {
+		task.ID = uuid.New()
+	}
 	query := `
 		INSERT INTO tasks (id, project_id, title, description, status, assignee_id)
 		VALUES (:id, :project_id, :title, :description, :status, :assignee_id)
