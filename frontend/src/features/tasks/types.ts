@@ -5,12 +5,15 @@ export type Project = {
 
 export type Task = {
   id: string;
-  projectId?: string;
+  projectId: string;
   title: string;
-  description?: string | null;
-  status?: string;
+  description?: string;
+  status: string;
   assigneeId?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 };
+
 
 export type CreateTaskInput = {
   title: string;
