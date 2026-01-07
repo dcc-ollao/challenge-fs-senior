@@ -2,6 +2,27 @@ import { useEffect, useMemo, useState } from "react";
 import { createTask, listProjects, listTasksByProject } from "./api";
 import type { Project, Task } from "./types";
 
+function StatusBadge({ status }: { status?: string }) {
+  if (!status) return null;
+
+  const styles: Record<string, string> = {
+    todo: "bg-slate-100 text-slate-700",
+    in_progress: "bg-blue-100 text-blue-700",
+    done: "bg-green-100 text-green-700",
+  };
+
+  return (
+    <span
+      className={[
+        "rounded-full px-2 py-0.5 text-xs font-medium",
+        styles[status] ?? "bg-slate-100 text-slate-600",
+      ].join(" ")}
+    >
+      {status.replace("_", " ")}
+    </span>
+  );
+}
+
 export default function TasksPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -179,12 +200,12 @@ export default function TasksPage() {
             {tasks.map((t) => (
               <li
                 key={t.id}
-                className="flex items-center justify-between px-4 py-3"
+                className="flex items-center justify-between px-4 py-3 transition hover:bg-slate-50"
               >
-                <div className="text-sm font-medium">{t.title}</div>
-                <div className="text-xs text-slate-500">
-                  {t.status ?? ""}
+                <div className="text-sm font-medium">
+                  {t.title}
                 </div>
+                <StatusBadge status={t.status} />
               </li>
             ))}
           </ul>
