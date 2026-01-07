@@ -15,8 +15,10 @@ function NavLink({
     <Link
       to={to}
       className={[
-        "text-sm font-medium",
-        active ? "underline" : "hover:underline",
+        "text-sm font-medium transition",
+        active
+          ? "text-slate-900"
+          : "text-slate-600 hover:text-slate-900",
       ].join(" ")}
     >
       {label}
@@ -28,21 +30,23 @@ export function AppLayout() {
   const { logout, user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-      <header className="border-b">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-6">
-            <div className="text-base font-semibold">Task Management</div>
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      <header className="border-b bg-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-8">
+            <div className="text-lg font-semibold tracking-tight">
+              Task Management
+            </div>
 
-            <nav className="flex items-center gap-4">
+            <nav className="flex items-center gap-5">
               <NavLink to="/" label="Home" />
               <NavLink to="/tasks" label="Tasks" />
               <NavLink to="/projects" label="Projects" />
             </nav>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-600">
+          <div className="flex items-center gap-4">
+            <span className="text-xs text-slate-500">
               {user?.email ?? ""}
             </span>
             <button
@@ -56,7 +60,7 @@ export function AppLayout() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-8">
+      <main className="mx-auto max-w-6xl px-6 py-10">
         <Outlet />
       </main>
     </div>
