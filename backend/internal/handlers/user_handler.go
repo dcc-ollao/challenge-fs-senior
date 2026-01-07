@@ -141,7 +141,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 
 func (h *UserHandler) Delete(c *gin.Context) {
 	targetID := c.Param("id")
-	actorID := c.GetString("userID")
+	actorID := c.GetString("userId")
 
 	if err := h.service.Delete(c.Request.Context(), actorID, targetID); err != nil {
 		if err == repository.ErrNotFound {

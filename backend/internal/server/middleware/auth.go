@@ -4,13 +4,13 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
-
 	jwtutil "task-management-platform/backend/pkg/jwt"
+
+	"github.com/gin-gonic/gin"
 )
 
 const (
-	ContextUserIDKey = "userID"
+	ContextUserIDKey = "userId"
 	ContextRoleKey   = "role"
 )
 
@@ -30,6 +30,11 @@ func AuthRequired() gin.HandlerFunc {
 
 		claims, err := jwtutil.ParseToken(parts[1])
 		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "invalid token"})
+			return
+		}
+
+		if claims.UserID == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "invalid token"})
 			return
 		}

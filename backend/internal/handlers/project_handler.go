@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	"task-management-platform/backend/internal/handlers/dto"
 	"task-management-platform/backend/internal/repository"
@@ -51,6 +52,11 @@ func (h *ProjectHandler) list(c *gin.Context) {
 	userID := c.GetString("userId")
 	role := c.GetString("role")
 
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing user id"})
+		return
+	}
+
 	projects, err := h.service.List(c.Request.Context(), userID, role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -63,6 +69,16 @@ func (h *ProjectHandler) list(c *gin.Context) {
 func (h *ProjectHandler) getByID(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.GetString("userId")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing user id"})
+		return
+	}
+
+	if _, err := uuid.Parse(userID); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user id"})
+		return
+	}
+
 	role := c.GetString("role")
 
 	p, err := h.service.GetByID(c.Request.Context(), userID, role, id)
