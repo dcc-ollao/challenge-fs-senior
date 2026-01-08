@@ -1,23 +1,30 @@
 import { useEffect, useState } from "react";
 import { listProjects, createProject } from "./api";
 import type { Project } from "./types";
+import { useSnackbar } from "../../components/snackbar/SnackbarContext";
 
 export default function ProjectsPage() {
+  const { showError, showSuccess } = useSnackbar();
+
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [creating, setCreating] = useState(false);
 
   async function loadProjects() {
     setLoading(true);
-    setError(null);
     try {
       const data = await listProjects();
       setProjects(data);
-    } catch {
-      setError("Failed to load projects.");
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ??
+        err?.response?.data?.error ??
+        err?.message ??
+        "Failed to load projects.";
+
+      showError(msg);
     } finally {
       setLoading(false);
     }
@@ -28,20 +35,26 @@ export default function ProjectsPage() {
     if (!name.trim()) return;
 
     setCreating(true);
-    setError(null);
     try {
       await createProject(name.trim());
       setName("");
+      showSuccess("Project created");
       await loadProjects();
-    } catch {
-      setError("Failed to create project.");
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ??
+        err?.response?.data?.error ??
+        err?.message ??
+        "Failed to create project.";
+
+      showError(msg);
     } finally {
       setCreating(false);
     }
   }
 
   useEffect(() => {
-    loadProjects();
+    void loadProjects();
   }, []);
 
   return (
@@ -53,13 +66,6 @@ export default function ProjectsPage() {
           Organize your work and collaborate by project.
         </p>
       </div>
-
-      {/* Error */}
-      {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
 
       {/* Create project */}
       <div className="rounded-lg border bg-white p-4 space-y-3">
@@ -105,12 +111,8 @@ export default function ProjectsPage() {
                 key={project.id}
                 className="flex items-center justify-between rounded-lg border bg-white px-4 py-3"
               >
-                <div className="font-medium text-sm">
-                  {project.name}
-                </div>
-                <div className="text-xs text-slate-500">
-                  Project
-                </div>
+                <div className="font-medium text-sm">{project.name}</div>
+                <div className="text-xs text-slate-500">Project</div>
               </div>
             ))}
           </div>
