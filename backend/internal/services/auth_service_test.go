@@ -57,8 +57,8 @@ func TestAuthService_Register_Success(t *testing.T) {
 	if user.Email != "test@test.com" {
 		t.Fatalf("user.Email = %q, want %q", user.Email, "test@test.com")
 	}
-	if user.Role != "member" {
-		t.Fatalf("user.Role = %q, want %q", user.Role, "member")
+	if user.Role != "user" {
+		t.Fatalf("user.Role = %q, want %q", user.Role, "user")
 	}
 	if user.PasswordHash == "" {
 		t.Fatalf("user.PasswordHash is empty")
@@ -96,7 +96,7 @@ func TestAuthService_Login_Success(t *testing.T) {
 		ID:           "u1",
 		Email:        "test@test.com",
 		PasswordHash: string(hash),
-		Role:         "member",
+		Role:         "user",
 		CreatedAt:    time.Now().UTC(),
 	}
 	_ = repo.Create(context.Background(), u)
@@ -119,7 +119,7 @@ func TestAuthService_Login_InvalidCredentials(t *testing.T) {
 		ID:           "u1",
 		Email:        "test@test.com",
 		PasswordHash: string(hash),
-		Role:         "member",
+		Role:         "user",
 		CreatedAt:    time.Now().UTC(),
 	}
 	_ = repo.Create(context.Background(), u)

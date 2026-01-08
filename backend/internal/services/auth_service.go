@@ -46,7 +46,7 @@ func (s *AuthService) Register(ctx context.Context, email, password string) (*mo
 		ID:           uuid.NewString(),
 		Email:        email,
 		PasswordHash: string(hash),
-		Role:         "member",
+		Role:         "user",
 		CreatedAt:    time.Now().UTC(),
 	}
 
