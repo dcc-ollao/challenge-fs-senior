@@ -1,11 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  createTask,
-  listProjects,
-  listTasksByProject,
-  updateTask,
-  updateTaskStatus,
-} from "./api";
+import { createTask, listProjects, listTasksByProject, updateTask } from "./api";
 import type { Project, Task } from "./types";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -72,7 +66,6 @@ export default function TasksPage() {
       setLoadingProjects(true);
       setError(null);
       try {
-        console.log("selectedProjectId", selectedProjectId);
         const data = await listProjects();
         if (!mounted) return;
         setProjects(data);
@@ -140,35 +133,35 @@ export default function TasksPage() {
   }
 
   async function onStatusChange(task: Task, nextStatus: string) {
-  const prevStatus = task.status;
+    const prevStatus = task.status;
 
-  setTasks((prev) =>
-    prev.map((t) => (t.id === task.id ? { ...t, status: nextStatus } : t))
-  );
-
-  try {
-    await updateTask(task.id, {
-      title: task.title,
-      description: task.description ?? "",
-      status: nextStatus,
-      assignee_id: task.assigneeId ?? null,
-    });
-  } catch {
     setTasks((prev) =>
-      prev.map((t) => (t.id === task.id ? { ...t, status: prevStatus } : t))
+      prev.map((t) => (t.id === task.id ? { ...t, status: nextStatus } : t))
     );
-    setError("Failed to update task status.");
+
+    try {
+      await updateTask(task.id, {
+        title: task.title,
+        description: task.description ?? "",
+        status: nextStatus,
+        assignee_id: task.assigneeId ?? null,
+      });
+    } catch {
+      setTasks((prev) =>
+        prev.map((t) => (t.id === task.id ? { ...t, status: prevStatus } : t))
+      );
+      setError("Failed to update task status.");
+    }
   }
-}
+
+  const showNoProjects = !loadingProjects && projects.length === 0;
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
-        <p className="text-slate-600">
-          Manage tasks within each project.
-        </p>
+        <p className="text-slate-600">Manage tasks within each project.</p>
       </div>
 
       {error && (
@@ -179,9 +172,7 @@ export default function TasksPage() {
 
       {/* Project selector */}
       <div className="rounded-lg border bg-white p-4 flex items-center gap-4">
-        <label className="text-sm font-medium text-slate-600">
-          Project
-        </label>
+        <label className="text-sm font-medium text-slate-600">Project</label>
         <select
           className="rounded-md border px-3 py-2 text-sm"
           value={selectedProjectId}
@@ -200,12 +191,17 @@ export default function TasksPage() {
         )}
       </div>
 
+      {/* No projects */}
+      {showNoProjects && (
+        <div className="rounded-lg border border-dashed bg-white p-8 text-center text-sm text-slate-600">
+          No projects found. Create a project first to start adding tasks.
+        </div>
+      )}
+
       {/* Create task */}
       {selectedProject && (
         <div className="rounded-lg border bg-white p-4 space-y-3">
-          <div className="text-sm font-medium">
-            Tasks for {selectedProject.name}
-          </div>
+          <div className="text-sm font-medium">Tasks for {selectedProject.name}</div>
 
           <form onSubmit={onCreate} className="flex gap-2">
             <input
@@ -227,27 +223,33 @@ export default function TasksPage() {
       )}
 
       {/* Tasks list */}
-      <ul className="divide-y rounded-lg border bg-white">
-        {tasks.map((t) => (
-          <li
-            key={t.id}
-            className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-slate-50 transition"
-          >
-            <div className="flex flex-col gap-1">
-              <div className="text-sm font-medium">{t.title}</div>
-              {t.projectId && projectMap[t.projectId] && (
-              <ProjectBadge name={projectMap[t.projectId].name} />
-              )}
+      {selectedProjectId && !showNoProjects ? (
+        loadingTasks ? (
+          <div className="text-sm text-slate-500">Loading tasks…</div>
+        ) : tasks.length === 0 ? (
+          <div className="rounded-lg border border-dashed bg-white p-8 text-center text-sm text-slate-600">
+            No tasks yet.
+          </div>
+        ) : (
+          <ul className="divide-y rounded-lg border bg-white">
+            {tasks.map((t) => (
+              <li
+                key={t.id}
+                className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-slate-50 transition"
+              >
+                <div className="flex flex-col gap-1">
+                  <div className="text-sm font-medium">{t.title}</div>
+                  {t.projectId && projectMap[t.projectId] && (
+                    <ProjectBadge name={projectMap[t.projectId].name} />
+                  )}
+                </div>
 
-            </div>
-
-            <StatusSelect
-              value={t.status}
-              onChange={(v) => onStatusChange(t, v)}
-            />
-          </li>
-        ))}
-      </ul>
+                <StatusSelect value={t.status} onChange={(v) => onStatusChange(t, v)} />
+              </li>
+            ))}
+          </ul>
+        )
+      ) : null}
     </div>
   );
 }
