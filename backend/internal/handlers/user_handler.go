@@ -110,7 +110,7 @@ func (h *UserHandler) Create(c *gin.Context) {
 
 func (h *UserHandler) Update(c *gin.Context) {
 	id := c.Param("id")
-
+	actorID := c.GetString("userId")
 	var req struct {
 		Email string `json:"email" binding:"required,email"`
 		Role  string `json:"role" binding:"required"`
@@ -127,13 +127,18 @@ func (h *UserHandler) Update(c *gin.Context) {
 		Role:  req.Role,
 	}
 
-	if err := h.service.Update(c.Request.Context(), user); err != nil {
-		if err == repository.ErrNotFound {
+	if err := h.service.Update(c.Request.Context(), actorID, user); err != nil {
+		switch err {
+		case repository.ErrNotFound:
 			RespondError(c, http.StatusNotFound, CodeNotFound, "user not found", gin.H{"id": id})
 			return
+		case services.ErrCannotUpdateOwnRole:
+			RespondError(c, http.StatusForbidden, CodeForbidden, "cannot update own role", nil)
+			return
+		default:
+			RespondError(c, http.StatusInternalServerError, CodeInternal, "could not update user", nil)
+			return
 		}
-		RespondError(c, http.StatusInternalServerError, CodeInternal, "could not update user", nil)
-		return
 	}
 
 	RespondOK(c, http.StatusOK, gin.H{"status": "updated"})

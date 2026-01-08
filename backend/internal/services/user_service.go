@@ -26,7 +26,10 @@ func (s *UserService) Create(ctx context.Context, user *models.User) error {
 	return s.repo.Create(ctx, user)
 }
 
-func (s *UserService) Update(ctx context.Context, user *models.User) error {
+func (s *UserService) Update(ctx context.Context, actorID string, user *models.User) error {
+	if actorID == user.ID {
+		return ErrCannotUpdateOwnRole
+	}
 	return s.repo.Update(ctx, user)
 }
 
