@@ -150,7 +150,7 @@ func TestTaskService_MemberCannotUpdateUnassignedTask(t *testing.T) {
 
 	member := models.User{
 		ID:   uuid.New().String(),
-		Role: "member",
+		Role: "user",
 	}
 
 	err := svc.Update(context.Background(), member, &models.Task{
@@ -187,7 +187,7 @@ func TestTaskService_MemberCannotReassignTaskToAnotherUser(t *testing.T) {
 
 	member := models.User{
 		ID:   memberID.String(),
-		Role: "member",
+		Role: "user",
 	}
 
 	err := svc.Update(context.Background(), member, &models.Task{

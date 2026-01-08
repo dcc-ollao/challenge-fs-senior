@@ -110,7 +110,7 @@ func TestAuthRequired_ValidToken_SetsContext(t *testing.T) {
 	if body["userId"] != "user-123" {
 		t.Fatalf("userId = %v, want %v", body["userId"], "user-123")
 	}
-	if body["role"] != "member" {
-		t.Fatalf("role = %v, want %v", body["role"], "member")
+	if body["role"] != "user" {
+		t.Fatalf("role = %v, want %v", body["role"], "user")
 	}
 }

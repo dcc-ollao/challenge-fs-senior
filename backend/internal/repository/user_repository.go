@@ -85,7 +85,7 @@ func (r *UserRepository) Update(ctx context.Context, user *models.User) error {
 	query := `
 		UPDATE users
 		SET email = :email,
-		    role = :role,
+		    role = :role
 		WHERE id = :id
 	`
 	res, err := r.db.NamedExecContext(ctx, query, user)

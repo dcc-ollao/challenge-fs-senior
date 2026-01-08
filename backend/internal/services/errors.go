@@ -12,4 +12,5 @@ var (
 	ErrInvalidToken             = errors.New("invalid token")
 	ErrJWTSecretNotSet          = errors.New("JWT_SECRET is not set")
 	ErrBadRequest               = errors.New("bad request")
+	ErrCannotUpdateOwnRole      = errors.New("cannot update own role")
 )

@@ -72,7 +72,7 @@ func TestProjectOwnerCanAccess(t *testing.T) {
 	}
 	_ = repo.Create(context.Background(), &p)
 
-	_, err := svc.GetByID(context.Background(), "user1", "member", "p1")
+	_, err := svc.GetByID(context.Background(), "user1", "user", "p1")
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -90,7 +90,7 @@ func TestProjectNonOwnerForbidden(t *testing.T) {
 	}
 	_ = repo.Create(context.Background(), &p)
 
-	_, err := svc.GetByID(context.Background(), "user2", "member", "p1")
+	_, err := svc.GetByID(context.Background(), "user2", "user", "p1")
 	if err != ErrForbidden {
 		t.Fatalf("expected ErrForbidden, got %v", err)
 	}
@@ -126,7 +126,7 @@ func TestUpdateForbidden(t *testing.T) {
 	}
 	_ = repo.Create(context.Background(), &p)
 
-	err := svc.UpdateName(context.Background(), "user2", "member", "p1", "new")
+	err := svc.UpdateName(context.Background(), "user2", "user", "p1", "new")
 	if err != ErrForbidden {
 		t.Fatalf("expected ErrForbidden, got %v", err)
 	}
@@ -144,7 +144,7 @@ func TestDeleteByOwner(t *testing.T) {
 	}
 	_ = repo.Create(context.Background(), &p)
 
-	err := svc.Delete(context.Background(), "user1", "member", "p1")
+	err := svc.Delete(context.Background(), "user1", "user", "p1")
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -154,7 +154,7 @@ func TestDeleteNotFound(t *testing.T) {
 	repo := newFakeProjectRepo()
 	svc := NewProjectService(repo)
 
-	err := svc.Delete(context.Background(), "user1", "member", "missing")
+	err := svc.Delete(context.Background(), "user1", "user", "missing")
 	if err != repository.ErrNotFound {
 		t.Fatalf("expected ErrNotFound, got %v", err)
 	}
@@ -164,7 +164,7 @@ func TestGetByIDNotFound(t *testing.T) {
 	repo := newFakeProjectRepo()
 	svc := NewProjectService(repo)
 
-	_, err := svc.GetByID(context.Background(), "user1", "member", "missing")
+	_, err := svc.GetByID(context.Background(), "user1", "user", "missing")
 	if err != repository.ErrNotFound {
 		t.Fatalf("expected ErrNotFound, got %v", err)
 	}

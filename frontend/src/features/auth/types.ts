@@ -1,11 +1,14 @@
-export interface User {
-  id?: string;
-  email?: string;
-}
+export type AuthUser = {
+  id: string;
+  email: string;
+  role: string;
+};
 
 export interface AuthContextValue {
-  user: User | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }

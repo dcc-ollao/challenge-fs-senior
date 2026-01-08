@@ -10,7 +10,7 @@ func TestGenerateAndParseToken_Success(t *testing.T) {
 	t.Setenv("JWT_TTL_MINUTES", "60")
 
 	userID := "user-123"
-	role := "member"
+	role := "user"
 
 	token, err := GenerateToken(userID, role)
 	if err != nil {
@@ -43,7 +43,7 @@ func TestParseToken_InvalidToken(t *testing.T) {
 	t.Setenv("JWT_SECRET", "test-secret")
 	t.Setenv("JWT_TTL_MINUTES", "60")
 
-	token, err := GenerateToken("user-123", "member")
+	token, err := GenerateToken("user-123", "user")
 	if err != nil {
 		t.Fatalf("GenerateToken() error = %v", err)
 	}
@@ -63,7 +63,7 @@ func TestParseToken_InvalidToken(t *testing.T) {
 func TestGenerateToken_MissingSecret(t *testing.T) {
 	_ = os.Unsetenv("JWT_SECRET")
 
-	_, err := GenerateToken("user-123", "member")
+	_, err := GenerateToken("user-123", "user")
 	if err == nil {
 		t.Fatalf("GenerateToken() expected error, got nil")
 	}

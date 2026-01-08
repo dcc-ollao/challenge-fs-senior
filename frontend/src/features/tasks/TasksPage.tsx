@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createTask, listProjects, listTasksByProject, updateTask } from "./api";
 import type { Project, Task } from "./types";
+import { useSnackbar } from "../../components/snackbar/SnackbarContext";
 
 const STATUS_LABELS: Record<string, string> = {
   todo: "To do",
@@ -38,14 +39,24 @@ function ProjectBadge({ name }: { name: string }) {
   );
 }
 
+function getErrorMessage(err: any, fallback: string) {
+  return (
+    err?.response?.data?.message ??
+    err?.response?.data?.error ??
+    err?.message ??
+    fallback
+  );
+}
+
 export default function TasksPage() {
+  const { showError, showSuccess } = useSnackbar();
+
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [loadingTasks, setLoadingTasks] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const [title, setTitle] = useState("");
   const [creating, setCreating] = useState(false);
@@ -64,24 +75,23 @@ export default function TasksPage() {
 
     async function loadProjects() {
       setLoadingProjects(true);
-      setError(null);
       try {
         const data = await listProjects();
         if (!mounted) return;
         setProjects(data);
         setSelectedProjectId(data.length > 0 ? data[0].id : "");
-      } catch {
-        setError("Failed to load projects.");
+      } catch (err: any) {
+        showError(getErrorMessage(err, "Failed to load projects."));
       } finally {
         if (mounted) setLoadingProjects(false);
       }
     }
 
-    loadProjects();
+    void loadProjects();
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [showError]);
 
   useEffect(() => {
     if (!selectedProjectId) {
@@ -93,23 +103,22 @@ export default function TasksPage() {
 
     async function loadTasks() {
       setLoadingTasks(true);
-      setError(null);
       try {
         const data = await listTasksByProject(selectedProjectId);
         if (!mounted) return;
         setTasks(data ?? []);
-      } catch {
-        setError("Failed to load tasks.");
+      } catch (err: any) {
+        showError(getErrorMessage(err, "Failed to load tasks."));
       } finally {
         if (mounted) setLoadingTasks(false);
       }
     }
 
-    loadTasks();
+    void loadTasks();
     return () => {
       mounted = false;
     };
-  }, [selectedProjectId]);
+  }, [selectedProjectId, showError]);
 
   async function onCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -119,14 +128,16 @@ export default function TasksPage() {
     if (!trimmed) return;
 
     setCreating(true);
-    setError(null);
     try {
       await createTask(selectedProjectId, trimmed);
       setTitle("");
+
       const data = await listTasksByProject(selectedProjectId);
       setTasks(data ?? []);
-    } catch {
-      setError("Failed to create task.");
+
+      showSuccess("Task created");
+    } catch (err: any) {
+      showError(getErrorMessage(err, "Failed to create task."));
     } finally {
       setCreating(false);
     }
@@ -146,11 +157,12 @@ export default function TasksPage() {
         status: nextStatus,
         assignee_id: task.assigneeId ?? null,
       });
-    } catch {
+      showSuccess("Task updated");
+    } catch (err: any) {
       setTasks((prev) =>
         prev.map((t) => (t.id === task.id ? { ...t, status: prevStatus } : t))
       );
-      setError("Failed to update task status.");
+      showError(getErrorMessage(err, "Failed to update task status."));
     }
   }
 
@@ -163,12 +175,6 @@ export default function TasksPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
         <p className="text-slate-600">Manage tasks within each project.</p>
       </div>
-
-      {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
 
       {/* Project selector */}
       <div className="rounded-lg border bg-white p-4 flex items-center gap-4">
