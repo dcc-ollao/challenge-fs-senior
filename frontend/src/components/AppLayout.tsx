@@ -42,12 +42,15 @@ export function AppLayout() {
               <NavLink to="/" label="Home" />
               <NavLink to="/tasks" label="Tasks" />
               <NavLink to="/projects" label="Projects" />
+              {user?.role === "admin" && (
+                <NavLink to="/admin/users" label="Users" />
+              )}
             </nav>
           </div>
 
           <div className="flex items-center gap-4">
             <span className="text-xs text-slate-500">
-              {user?.email ?? ""}
+              {user?.email}
             </span>
             <button
               onClick={logout}

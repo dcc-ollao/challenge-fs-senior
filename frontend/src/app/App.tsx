@@ -5,6 +5,8 @@ import HomePage from "../pages/HomePage";
 import { AppLayout } from "../components/AppLayout";
 import TasksPage from "../features/tasks/TasksPage";
 import ProjectsPage from "../features/projects/ProjectsPage";
+import AdminRoute from "../components/AdminRoute";
+import UsersAdminPage from "../features/users/UserAdminPage";
 
 export default function App() {
   return (
@@ -20,6 +22,15 @@ export default function App() {
           <Route index element={<HomePage />} />
           <Route path="/tasks" element={<TasksPage />} />
           <Route path="/projects" element={<ProjectsPage />} />
+          <Route
+            path="/admin/users"
+            element={
+              <AdminRoute>
+                <UsersAdminPage />
+              </AdminRoute>
+            }
+          />
+
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
