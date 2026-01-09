@@ -9,7 +9,7 @@ export type Task = {
   title: string;
   description?: string;
   status: string;
-  assigneeId?: string | null;
+  assigneeId: string | null;
   createdAt?: string;
   updatedAt?: string;
 };

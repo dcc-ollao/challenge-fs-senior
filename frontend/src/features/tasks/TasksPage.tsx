@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { createTask, listProjects, listTasksByProject, updateTask } from "./api";
+import {
+  createTask,
+  listProjects,
+  listTasksByProject,
+  updateTask,
+  listAssignableUsers,
+} from "./api";
 import type { Project, Task } from "./types";
 import { useSnackbar } from "../../components/snackbar/SnackbarContext";
+import { useAuthContext } from "../auth/AuthContext";
 
 const STATUS_LABELS: Record<string, string> = {
   todo: "To do",
@@ -9,18 +16,26 @@ const STATUS_LABELS: Record<string, string> = {
   done: "Done",
 };
 
+type AssignableUser = {
+  id: string;
+  email: string;
+};
+
 function StatusSelect({
   value,
   onChange,
+  disabled,
 }: {
   value?: string;
   onChange: (v: string) => void;
+  disabled?: boolean;
 }) {
   return (
     <select
       value={value ?? "todo"}
       onChange={(e) => onChange(e.target.value)}
-      className="rounded-md border px-2 py-1 text-xs bg-white hover:bg-slate-50"
+      disabled={disabled}
+      className="rounded-md border px-2 py-1 text-xs bg-white hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed"
     >
       {Object.entries(STATUS_LABELS).map(([key, label]) => (
         <option key={key} value={key}>
@@ -30,6 +45,7 @@ function StatusSelect({
     </select>
   );
 }
+
 
 function ProjectBadge({ name }: { name: string }) {
   return (
@@ -49,12 +65,17 @@ function getErrorMessage(err: any, fallback: string) {
 }
 
 export default function TasksPage() {
-  const { showError, showSuccess } = useSnackbar();
+  const { showError } = useSnackbar();
+  const { user } = useAuthContext();
+
+  const isAdmin = user?.role === "admin";
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
 
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [users, setUsers] = useState<AssignableUser[]>([]);
+
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [loadingTasks, setLoadingTasks] = useState(false);
 
@@ -66,10 +87,12 @@ export default function TasksPage() {
     [projects, selectedProjectId]
   );
 
-  const projectMap = useMemo(() => {
-    return Object.fromEntries(projects.map((p) => [p.id, p]));
-  }, [projects]);
+  const projectMap = useMemo(
+    () => Object.fromEntries(projects.map((p) => [p.id, p])),
+    [projects]
+  );
 
+  // Load projects
   useEffect(() => {
     let mounted = true;
 
@@ -93,6 +116,7 @@ export default function TasksPage() {
     };
   }, [showError]);
 
+  // Load tasks
   useEffect(() => {
     if (!selectedProjectId) {
       setTasks([]);
@@ -120,6 +144,24 @@ export default function TasksPage() {
     };
   }, [selectedProjectId, showError]);
 
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadUsers() {
+      try {
+        const data = await listAssignableUsers();
+        if (mounted) setUsers(data);
+      } catch {
+        showError("Failed to load users");
+      }
+    }
+
+    void loadUsers();
+    return () => {
+      mounted = false;
+    };
+  }, [showError]);
+
   async function onCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedProjectId) return;
@@ -134,8 +176,6 @@ export default function TasksPage() {
 
       const data = await listTasksByProject(selectedProjectId);
       setTasks(data ?? []);
-
-      showSuccess("Task created");
     } catch (err: any) {
       showError(getErrorMessage(err, "Failed to create task."));
     } finally {
@@ -155,14 +195,39 @@ export default function TasksPage() {
         title: task.title,
         description: task.description ?? "",
         status: nextStatus,
-        assignee_id: task.assigneeId ?? null,
+        assigneeId: task.assigneeId ?? null,
       });
-      showSuccess("Task updated");
     } catch (err: any) {
       setTasks((prev) =>
         prev.map((t) => (t.id === task.id ? { ...t, status: prevStatus } : t))
       );
       showError(getErrorMessage(err, "Failed to update task status."));
+    }
+  }
+
+  async function onAssigneeChange(task: Task, nextAssignee: string | null) {
+    const prev = task.assigneeId;
+
+    setTasks((prevTasks) =>
+      prevTasks.map((t) =>
+        t.id === task.id ? { ...t, assigneeId: nextAssignee } : t
+      )
+    );
+
+    try {
+      await updateTask(task.id, {
+        title: task.title,
+        description: task.description ?? "",
+        status: task.status,
+        assigneeId: nextAssignee,
+      });
+    } catch (err: any) {
+      setTasks((prevTasks) =>
+        prevTasks.map((t) =>
+          t.id === task.id ? { ...t, assigneeId: prev } : t
+        )
+      );
+      showError(getErrorMessage(err, "Failed to update assignee."));
     }
   }
 
@@ -207,7 +272,9 @@ export default function TasksPage() {
       {/* Create task */}
       {selectedProject && (
         <div className="rounded-lg border bg-white p-4 space-y-3">
-          <div className="text-sm font-medium">Tasks for {selectedProject.name}</div>
+          <div className="text-sm font-medium">
+            Tasks for {selectedProject.name}
+          </div>
 
           <form onSubmit={onCreate} className="flex gap-2">
             <input
@@ -238,7 +305,11 @@ export default function TasksPage() {
           </div>
         ) : (
           <ul className="divide-y rounded-lg border bg-white">
-            {tasks.map((t) => (
+          {tasks.map((t) => {
+            const canChangeStatus =
+              user?.role === "admin" || t.assigneeId === user?.id;
+
+            return (
               <li
                 key={t.id}
                 className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-slate-50 transition"
@@ -250,10 +321,33 @@ export default function TasksPage() {
                   )}
                 </div>
 
-                <StatusSelect value={t.status} onChange={(v) => onStatusChange(t, v)} />
+                <div className="flex items-center gap-3">
+                  <select
+                    value={t.assigneeId ?? ""}
+                    disabled={user?.role !== "admin"}
+                    onChange={(e) =>
+                      onAssigneeChange(t, e.target.value || null)
+                    }
+                    className="rounded-md border px-2 py-1 text-xs bg-white disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Unassigned</option>
+                    {users.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.email}
+                      </option>
+                    ))}
+                  </select>
+
+                  <StatusSelect
+                    value={t.status}
+                    onChange={(v) => onStatusChange(t, v)}
+                    disabled={!canChangeStatus}
+                  />
+                </div>
               </li>
-            ))}
-          </ul>
+            );
+          })}
+        </ul>
         )
       ) : null}
     </div>

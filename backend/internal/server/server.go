@@ -33,6 +33,7 @@ func New(cfg config.Config) *gin.Engine {
 	userRepo := repository.NewUserRepository(db)
 	projectRepo := repository.NewProjectRepository(db)
 	taskRepo := repository.NewTaskRepository(db)
+	apiUserRepo := repository.NewAPIUserRepository(db)
 
 	authService := services.NewAuthService(userRepo)
 	authHandler := handlers.NewAuthHandler(authService)
@@ -45,6 +46,9 @@ func New(cfg config.Config) *gin.Engine {
 
 	taskService := services.NewTaskService(taskRepo, projectRepo)
 	taskHandler := handlers.NewTaskHandler(taskService)
+
+	apiUserSvc := services.NewAPIUserService(apiUserRepo)
+	apiUserHandler := handlers.NewAPIUserHandler(apiUserSvc)
 
 	r.GET("/", func(c *gin.Context) {
 		handlers.RespondOK(c, http.StatusOK, gin.H{"status": "ok"})
@@ -59,6 +63,7 @@ func New(cfg config.Config) *gin.Engine {
 		UserHandler:    userHandler,
 		ProjectHandler: projectHandler,
 		TaskHandler:    taskHandler,
+		APIUserHandler: apiUserHandler,
 	})
 
 	return r

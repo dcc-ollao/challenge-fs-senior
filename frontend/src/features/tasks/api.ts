@@ -26,14 +26,21 @@ export async function updateTaskStatus(
   return res.data;
 }
 
-export type UpdateTaskInput = {
-  title: string;
-  description: string;
-  status: string;
-  assignee_id?: string | null;
-};
-
 export async function updateTask(taskId: string, input: UpdateTaskInput): Promise<Task> {
   const res = await api.put<Task>(`/api/tasks/${taskId}`, input);
   return res.data;
 }
+
+export async function listAssignableUsers(): Promise<AssignableUser[]> {
+  const res = await api.get<AssignableUser[]>("/api/users");
+  return res.data;
+}
+
+export type UpdateTaskInput = {
+  title: string;
+  description: string;
+  status: string;
+  assigneeId?: string | null;
+};
+
+export type AssignableUser = { id: string; email: string };
