@@ -16,6 +16,7 @@ type ProjectRepository interface {
 	ListByOwner(ctx context.Context, ownerID string) ([]models.Project, error)
 	UpdateName(ctx context.Context, id string, name string) error
 	Delete(ctx context.Context, id string) error
+	List(ctx context.Context) ([]models.Project, error)
 }
 
 type projectRepository struct {
@@ -101,4 +102,18 @@ func (r *projectRepository) Delete(ctx context.Context, id string) error {
 		return ErrNotFound
 	}
 	return nil
+}
+
+func (r *projectRepository) List(ctx context.Context) ([]models.Project, error) {
+	projects := make([]models.Project, 0)
+
+	query := `
+		SELECT id, name, owner_id, created_at
+		FROM projects
+		ORDER BY created_at DESC
+	`
+	if err := r.db.SelectContext(ctx, &projects, query); err != nil {
+		return nil, err
+	}
+	return projects, nil
 }
