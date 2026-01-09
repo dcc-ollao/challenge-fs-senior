@@ -3,6 +3,8 @@ package server
 import (
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"task-management-platform/backend/internal/config"
@@ -20,11 +22,22 @@ func New(cfg config.Config) *gin.Engine {
 	r := gin.Default()
 	rl := middleware.NewRateLimiter(120, time.Minute)
 	r.Use(middleware.RateLimit(rl))
+	origins := []string{
+		"http://localhost:5173",
+		"http://localhost:3000",
+	}
+
+	if v := os.Getenv("CORS_ORIGINS"); v != "" {
+		origins = strings.Split(v, ",")
+	}
+
 	r.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"http://localhost:3000"},
-		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
-		MaxAge:       12 * time.Hour,
+		AllowOrigins:     origins,
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Disposition"}, // 👈 importante para export ZIP/CSV
+		AllowCredentials: false,
+		MaxAge:           12 * time.Hour,
 	}))
 
 	db, err := repository.NewDB(cfg)
