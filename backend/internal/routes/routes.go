@@ -7,11 +7,12 @@ import (
 )
 
 type Dependencies struct {
-	AuthHandler    *handlers.AuthHandler
-	UserHandler    *handlers.UserHandler
-	ProjectHandler *handlers.ProjectHandler
-	TaskHandler    *handlers.TaskHandler
-	APIUserHandler *handlers.APIUserHandler
+	AuthHandler        *handlers.AuthHandler
+	UserHandler        *handlers.UserHandler
+	ProjectHandler     *handlers.ProjectHandler
+	TaskHandler        *handlers.TaskHandler
+	APIUserHandler     *handlers.APIUserHandler
+	AdminExportHandler *handlers.AdminExportHandler
 }
 
 func Register(r *gin.Engine, deps Dependencies) {
@@ -33,5 +34,9 @@ func Register(r *gin.Engine, deps Dependencies) {
 
 	if deps.APIUserHandler != nil {
 		RegisterAPIUserRoutes(r, deps.APIUserHandler)
+	}
+
+	if deps.AdminExportHandler != nil {
+		RegisterAdminRoutes(r, deps.AdminExportHandler)
 	}
 }

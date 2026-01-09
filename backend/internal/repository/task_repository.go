@@ -24,6 +24,7 @@ type TaskRepository interface {
 	List(ctx context.Context, filters TaskFilters) ([]models.Task, error)
 	Update(ctx context.Context, task *models.Task) error
 	Delete(ctx context.Context, id uuid.UUID) error
+	ListAll(ctx context.Context) ([]models.Task, error)
 }
 
 type taskRepository struct {
@@ -119,4 +120,18 @@ func (r *taskRepository) Update(ctx context.Context, task *models.Task) error {
 func (r *taskRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	_, err := r.db.ExecContext(ctx, `DELETE FROM tasks WHERE id = $1`, id)
 	return err
+}
+
+func (r *taskRepository) ListAll(ctx context.Context) ([]models.Task, error) {
+	tasks := make([]models.Task, 0)
+
+	query := `
+		SELECT id, project_id, title, description, status, assignee_id, created_at
+		FROM tasks
+		ORDER BY created_at DESC
+	`
+	if err := r.db.SelectContext(ctx, &tasks, query); err != nil {
+		return nil, err
+	}
+	return tasks, nil
 }

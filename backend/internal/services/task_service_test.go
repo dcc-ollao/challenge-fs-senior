@@ -39,6 +39,14 @@ func (f *fakeTaskRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.Task,
 	return &t, nil
 }
 
+func (f *fakeTaskRepo) ListAll(ctx context.Context) ([]models.Task, error) {
+	out := make([]models.Task, 0, len(f.tasks))
+	for _, t := range f.tasks {
+		out = append(out, t)
+	}
+	return out, nil
+}
+
 func (f *fakeTaskRepo) List(ctx context.Context, filters repository.TaskFilters) ([]models.Task, error) {
 	out := make([]models.Task, 0)
 
@@ -118,6 +126,10 @@ func (f *fakeProjectRepoForTasks) UpdateName(ctx context.Context, id string, nam
 	return nil
 }
 func (f *fakeProjectRepoForTasks) Delete(ctx context.Context, id string) error { return nil }
+
+func (f *fakeProjectRepoForTasks) List(ctx context.Context) ([]models.Project, error) {
+	return []models.Project{}, nil
+}
 
 func ptrUUID(u uuid.UUID) *uuid.UUID { return &u }
 

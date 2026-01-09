@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { changePassword } from "./api";
+import { changePassword, exportAdminDataZip } from "./api";
+import { useAuth } from "../auth/useAuth";
 
 export function AccountPage() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -9,6 +10,10 @@ export function AccountPage() {
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -102,6 +107,25 @@ export function AccountPage() {
           {isLoading ? "Updating..." : "Update password"}
         </button>
       </form>
+      {isAdmin && (
+        <div className="mt-6 rounded-lg border bg-white p-4">
+          <div className="text-sm font-medium">Admin</div>
+          <p className="mt-1 text-sm text-slate-600">
+            Export all application data as CSV files inside a ZIP.
+          </p>
+
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={exportAdminDataZip}
+              className="rounded-md border px-3 py-2 text-sm hover:bg-slate-50"
+            >
+              Export data (ZIP)
+            </button>
+          </div>
+        </div>
+      )}
     </div>
+    
   );
 }

@@ -51,6 +51,7 @@ func New(cfg config.Config) *gin.Engine {
 
 	apiUserSvc := services.NewAPIUserService(apiUserRepo)
 	apiUserHandler := handlers.NewAPIUserHandler(apiUserSvc)
+	adminExportHandler := handlers.NewAdminExportHandler(userRepo, projectRepo, taskRepo)
 
 	r.GET("/", func(c *gin.Context) {
 		handlers.RespondOK(c, http.StatusOK, gin.H{"status": "ok"})
@@ -61,11 +62,12 @@ func New(cfg config.Config) *gin.Engine {
 	})
 
 	routes.Register(r, routes.Dependencies{
-		AuthHandler:    authHandler,
-		UserHandler:    userHandler,
-		ProjectHandler: projectHandler,
-		TaskHandler:    taskHandler,
-		APIUserHandler: apiUserHandler,
+		AuthHandler:        authHandler,
+		UserHandler:        userHandler,
+		ProjectHandler:     projectHandler,
+		TaskHandler:        taskHandler,
+		APIUserHandler:     apiUserHandler,
+		AdminExportHandler: adminExportHandler,
 	})
 
 	return r
