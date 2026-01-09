@@ -15,6 +15,7 @@ type UserRepo interface {
 	Create(ctx context.Context, user *models.User) error
 	GetByEmail(ctx context.Context, email string) (*models.User, error)
 	GetByID(ctx context.Context, id string) (*models.User, error)
+	UpdatePasswordHash(ctx context.Context, id string, passwordHash string) error
 }
 
 type AuthService struct {
@@ -81,4 +82,37 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*model
 
 func normalizeEmail(email string) string {
 	return strings.TrimSpace(strings.ToLower(email))
+}
+
+func (s *AuthService) ChangePassword(ctx context.Context, userID, currentPassword, newPassword string) error {
+	currentPassword = strings.TrimSpace(currentPassword)
+	newPassword = strings.TrimSpace(newPassword)
+
+	if currentPassword == "" || newPassword == "" {
+		return ErrBadRequest
+	}
+
+	if len(newPassword) < 4 {
+		return ErrBadRequest
+	}
+
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return ErrInvalidCredentials
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(currentPassword)); err != nil {
+		return ErrInvalidCredentials
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	if err := s.userRepo.UpdatePasswordHash(ctx, userID, string(hash)); err != nil {
+		return err
+	}
+
+	return nil
 }

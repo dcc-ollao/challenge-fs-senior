@@ -76,7 +76,7 @@ func TestAuthRequired_ValidToken_SetsContext(t *testing.T) {
 	t.Setenv("JWT_SECRET", "test-secret")
 	t.Setenv("JWT_TTL_MINUTES", "60")
 
-	token, err := jwtutil.GenerateToken("user-123", "member")
+	token, err := jwtutil.GenerateToken("user-123", "user")
 	if err != nil {
 		t.Fatalf("GenerateToken error = %v", err)
 	}

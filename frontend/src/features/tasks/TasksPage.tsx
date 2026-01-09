@@ -68,8 +68,6 @@ export default function TasksPage() {
   const { showError } = useSnackbar();
   const { user } = useAuthContext();
 
-  const isAdmin = user?.role === "admin";
-
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
 
