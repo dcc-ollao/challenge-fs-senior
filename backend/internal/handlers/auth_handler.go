@@ -7,6 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"task-management-platform/backend/internal/handlers/dto"
+	"task-management-platform/backend/internal/server/middleware"
 	"task-management-platform/backend/internal/services"
 	jwtutil "task-management-platform/backend/pkg/jwt"
 )
@@ -89,4 +91,44 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, authResponse{AccessToken: token})
+}
+
+func (h *AuthHandler) ChangePassword(c *gin.Context) {
+	userIDAny, ok := c.Get(middleware.ContextUserIDKey)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "unauthorized"})
+		return
+	}
+
+	userID, _ := userIDAny.(string)
+	if strings.TrimSpace(userID) == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "unauthorized"})
+		return
+	}
+
+	var req dto.ChangePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body"})
+		return
+	}
+
+	req.CurrentPassword = strings.TrimSpace(req.CurrentPassword)
+	req.NewPassword = strings.TrimSpace(req.NewPassword)
+
+	err := h.authService.ChangePassword(c.Request.Context(), userID, req.CurrentPassword, req.NewPassword)
+	if err != nil {
+		switch {
+		case errors.Is(err, services.ErrInvalidCredentials):
+			c.JSON(http.StatusForbidden, gin.H{"message": "current password is incorrect"})
+			return
+		case errors.Is(err, services.ErrBadRequest):
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			return
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal error"})
+			return
+		}
+	}
+
+	c.Status(http.StatusNoContent)
 }

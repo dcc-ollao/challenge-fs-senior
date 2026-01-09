@@ -14,6 +14,7 @@ func RegisterAuthRoutes(r *gin.Engine, authHandler *handlers.AuthHandler) {
 	{
 		auth.POST("/register", authHandler.Register)
 		auth.POST("/login", authHandler.Login)
+		auth.POST("/change-password", middleware.AuthRequired(), authHandler.ChangePassword)
 		auth.GET("/me", middleware.AuthRequired(), func(c *gin.Context) {
 			userID, _ := c.Get(middleware.ContextUserIDKey)
 			role, _ := c.Get(middleware.ContextRoleKey)

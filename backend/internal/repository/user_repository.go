@@ -117,3 +117,23 @@ func (r *UserRepository) Delete(ctx context.Context, id string) error {
 	}
 	return nil
 }
+
+func (r *UserRepository) UpdatePasswordHash(ctx context.Context, id string, passwordHash string) error {
+	query := `
+		UPDATE users
+		SET password_hash = $1
+		WHERE id = $2
+	`
+	res, err := r.db.ExecContext(ctx, query, passwordHash, id)
+	if err != nil {
+		return err
+	}
+	aff, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if aff == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
