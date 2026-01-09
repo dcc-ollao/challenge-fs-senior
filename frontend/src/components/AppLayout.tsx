@@ -42,9 +42,11 @@ export function AppLayout() {
               <NavLink to="/" label="Home" />
               <NavLink to="/tasks" label="Tasks" />
               <NavLink to="/projects" label="Projects" />
+              <NavLink to="/account" label="Account" />
               {user?.role === "admin" && (
                 <NavLink to="/admin/users" label="Users" />
               )}
+              
             </nav>
           </div>
 
