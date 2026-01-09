@@ -15,6 +15,7 @@ type ProjectRepository interface {
 	ListByOwner(context.Context, string) ([]models.Project, error)
 	UpdateName(context.Context, string, string) error
 	Delete(context.Context, string) error
+	List(context.Context) ([]models.Project, error)
 }
 
 type ProjectService struct {
@@ -53,8 +54,7 @@ func (s *ProjectService) GetByID(ctx context.Context, requesterID string, reques
 }
 
 func (s *ProjectService) List(ctx context.Context, requesterID string, requesterRole string) ([]models.Project, error) {
-	_ = requesterRole
-	return s.repo.ListByOwner(ctx, requesterID)
+	return s.repo.List(ctx)
 }
 
 func (s *ProjectService) UpdateName(ctx context.Context, requesterID string, requesterRole string, projectID string, name string) error {
