@@ -46,7 +46,6 @@ function StatusSelect({
   );
 }
 
-
 function ProjectBadge({ name }: { name: string }) {
   return (
     <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
@@ -64,9 +63,13 @@ function getErrorMessage(err: any, fallback: string) {
   );
 }
 
+type StatusFilter = "all" | "todo" | "in_progress" | "done";
+
 export default function TasksPage() {
   const { showError } = useSnackbar();
   const { user } = useAuthContext();
+
+  const isAdmin = user?.role === "admin";
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -79,6 +82,11 @@ export default function TasksPage() {
 
   const [title, setTitle] = useState("");
   const [creating, setCreating] = useState(false);
+
+  // Filters (client-side)
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [assigneeFilter, setAssigneeFilter] = useState<string>("all"); // "all" | "unassigned" | userId
+  const [query, setQuery] = useState("");
 
   const selectedProject = useMemo(
     () => projects.find((p) => p.id === selectedProjectId) ?? null,
@@ -142,6 +150,7 @@ export default function TasksPage() {
     };
   }, [selectedProjectId, showError]);
 
+  // Load users for assignment
   useEffect(() => {
     let mounted = true;
 
@@ -221,15 +230,39 @@ export default function TasksPage() {
       });
     } catch (err: any) {
       setTasks((prevTasks) =>
-        prevTasks.map((t) =>
-          t.id === task.id ? { ...t, assigneeId: prev } : t
-        )
+        prevTasks.map((t) => (t.id === task.id ? { ...t, assigneeId: prev } : t))
       );
       showError(getErrorMessage(err, "Failed to update assignee."));
     }
   }
 
   const showNoProjects = !loadingProjects && projects.length === 0;
+
+  const normalizedQuery = query.trim().toLowerCase();
+
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((t) => {
+      // status
+      if (statusFilter !== "all" && t.status !== statusFilter) return false;
+
+      // assignee filter (admin only)
+      if (isAdmin) {
+        if (assigneeFilter === "unassigned") {
+          if (t.assigneeId) return false;
+        } else if (assigneeFilter !== "all") {
+          if (t.assigneeId !== assigneeFilter) return false;
+        }
+      }
+
+      // search
+      if (normalizedQuery) {
+        const haystack = `${t.title ?? ""} ${t.description ?? ""}`.toLowerCase();
+        if (!haystack.includes(normalizedQuery)) return false;
+      }
+
+      return true;
+    });
+  }, [tasks, statusFilter, assigneeFilter, isAdmin, normalizedQuery]);
 
   return (
     <div className="space-y-8">
@@ -293,59 +326,116 @@ export default function TasksPage() {
         </div>
       )}
 
+      {/* Filters */}
+      {selectedProjectId && !showNoProjects && !loadingTasks && tasks.length > 0 && (
+        <div className="rounded-lg border bg-white p-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search tasks..."
+              className="w-64 rounded-md border px-3 py-2 text-sm"
+            />
+
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+              className="rounded-md border px-3 py-2 text-sm bg-white"
+            >
+              <option value="all">All statuses</option>
+              <option value="todo">To do</option>
+              <option value="in_progress">In progress</option>
+              <option value="done">Done</option>
+            </select>
+
+            {isAdmin && (
+              <select
+                value={assigneeFilter}
+                onChange={(e) => setAssigneeFilter(e.target.value)}
+                className="rounded-md border px-3 py-2 text-sm bg-white"
+              >
+                <option value="all">All assignees</option>
+                <option value="unassigned">Unassigned</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.email}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                setQuery("");
+                setStatusFilter("all");
+                setAssigneeFilter("all");
+              }}
+              className="rounded-md border px-3 py-2 text-sm hover:bg-slate-50"
+            >
+              Reset
+            </button>
+
+            <div className="ml-auto text-xs text-slate-500">
+              Showing {filteredTasks.length} of {tasks.length}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Tasks list */}
       {selectedProjectId && !showNoProjects ? (
         loadingTasks ? (
           <div className="text-sm text-slate-500">Loading tasks…</div>
-        ) : tasks.length === 0 ? (
+        ) : filteredTasks.length === 0 ? (
           <div className="rounded-lg border border-dashed bg-white p-8 text-center text-sm text-slate-600">
-            No tasks yet.
+            No matching tasks.
           </div>
         ) : (
           <ul className="divide-y rounded-lg border bg-white">
-          {tasks.map((t) => {
-            const canChangeStatus =
-              user?.role === "admin" || t.assigneeId === user?.id;
+            {filteredTasks.map((t) => {
+              const canChangeStatus =
+                user?.role === "admin" || t.assigneeId === user?.id;
 
-            return (
-              <li
-                key={t.id}
-                className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-slate-50 transition"
-              >
-                <div className="flex flex-col gap-1">
-                  <div className="text-sm font-medium">{t.title}</div>
-                  {t.projectId && projectMap[t.projectId] && (
-                    <ProjectBadge name={projectMap[t.projectId].name} />
-                  )}
-                </div>
+              return (
+                <li
+                  key={t.id}
+                  className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-slate-50 transition"
+                >
+                  <div className="flex flex-col gap-1">
+                    <div className="text-sm font-medium">{t.title}</div>
+                    {t.projectId && projectMap[t.projectId] && (
+                      <ProjectBadge name={projectMap[t.projectId].name} />
+                    )}
+                  </div>
 
-                <div className="flex items-center gap-3">
-                  <select
-                    value={t.assigneeId ?? ""}
-                    disabled={user?.role !== "admin"}
-                    onChange={(e) =>
-                      onAssigneeChange(t, e.target.value || null)
-                    }
-                    className="rounded-md border px-2 py-1 text-xs bg-white disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    <option value="">Unassigned</option>
-                    {users.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.email}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex items-center gap-3">
+                    <select
+                      value={t.assigneeId ?? ""}
+                      disabled={user?.role !== "admin"}
+                      onChange={(e) =>
+                        onAssigneeChange(t, e.target.value || null)
+                      }
+                      className="rounded-md border px-2 py-1 text-xs bg-white disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      <option value="">Unassigned</option>
+                      {users.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.email}
+                        </option>
+                      ))}
+                    </select>
 
-                  <StatusSelect
-                    value={t.status}
-                    onChange={(v) => onStatusChange(t, v)}
-                    disabled={!canChangeStatus}
-                  />
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                    <StatusSelect
+                      value={t.status}
+                      onChange={(v) => onStatusChange(t, v)}
+                      disabled={!canChangeStatus}
+                    />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         )
       ) : null}
     </div>
