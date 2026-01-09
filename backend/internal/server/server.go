@@ -9,6 +9,7 @@ import (
 	"task-management-platform/backend/internal/handlers"
 	"task-management-platform/backend/internal/repository"
 	"task-management-platform/backend/internal/routes"
+	"task-management-platform/backend/internal/server/middleware"
 	"task-management-platform/backend/internal/services"
 
 	"github.com/gin-contrib/cors"
@@ -17,7 +18,8 @@ import (
 
 func New(cfg config.Config) *gin.Engine {
 	r := gin.Default()
-
+	rl := middleware.NewRateLimiter(120, time.Minute)
+	r.Use(middleware.RateLimit(rl))
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{"http://localhost:3000"},
 		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},

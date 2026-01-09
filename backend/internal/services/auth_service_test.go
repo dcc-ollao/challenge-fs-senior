@@ -45,6 +45,15 @@ func (r *fakeUserRepo) GetByID(ctx context.Context, id string) (*models.User, er
 	return u, nil
 }
 
+func (r *fakeUserRepo) UpdatePasswordHash(ctx context.Context, id string, passwordHash string) error {
+	u, ok := r.byID[id]
+	if !ok {
+		return ErrNotFound
+	}
+	u.PasswordHash = passwordHash
+	return nil
+}
+
 func TestAuthService_Register_Success(t *testing.T) {
 	repo := newFakeUserRepo()
 	svc := NewAuthService(repo)
@@ -132,5 +141,49 @@ func TestAuthService_Login_InvalidCredentials(t *testing.T) {
 	_, err = svc.Login(context.Background(), "missing@test.com", "1234")
 	if !errors.Is(err, ErrInvalidCredentials) {
 		t.Fatalf("Login() err = %v, want ErrInvalidCredentials", err)
+	}
+}
+
+func TestAuthService_ChangePassword_Success(t *testing.T) {
+	repo := newFakeUserRepo()
+	svc := NewAuthService(repo)
+
+	hash, _ := bcrypt.GenerateFromPassword([]byte("oldpass123"), bcrypt.DefaultCost)
+	u := &models.User{
+		ID:           "u1",
+		Email:        "test@test.com",
+		PasswordHash: string(hash),
+		Role:         "user",
+		CreatedAt:    time.Now().UTC(),
+	}
+	_ = repo.Create(context.Background(), u)
+
+	if err := svc.ChangePassword(context.Background(), "u1", "oldpass123", "newpass123"); err != nil {
+		t.Fatalf("ChangePassword() error = %v", err)
+	}
+
+	updated, _ := repo.GetByID(context.Background(), "u1")
+	if err := bcrypt.CompareHashAndPassword([]byte(updated.PasswordHash), []byte("newpass123")); err != nil {
+		t.Fatalf("password was not updated")
+	}
+}
+
+func TestAuthService_ChangePassword_WrongCurrent(t *testing.T) {
+	repo := newFakeUserRepo()
+	svc := NewAuthService(repo)
+
+	hash, _ := bcrypt.GenerateFromPassword([]byte("oldpass123"), bcrypt.DefaultCost)
+	u := &models.User{
+		ID:           "u1",
+		Email:        "test@test.com",
+		PasswordHash: string(hash),
+		Role:         "user",
+		CreatedAt:    time.Now().UTC(),
+	}
+	_ = repo.Create(context.Background(), u)
+
+	err := svc.ChangePassword(context.Background(), "u1", "wrong", "newpass123")
+	if !errors.Is(err, ErrInvalidCredentials) {
+		t.Fatalf("ChangePassword() err = %v, want ErrInvalidCredentials", err)
 	}
 }
