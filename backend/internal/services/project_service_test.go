@@ -60,6 +60,14 @@ func (f *fakeProjectRepo) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
+func (f *fakeProjectRepo) List(ctx context.Context) ([]models.Project, error) {
+	out := make([]models.Project, 0, len(f.projects))
+	for _, p := range f.projects {
+		out = append(out, p)
+	}
+	return out, nil
+}
+
 func TestProjectOwnerCanAccess(t *testing.T) {
 	repo := newFakeProjectRepo()
 	svc := NewProjectService(repo)
